@@ -9,11 +9,21 @@ A simple script for loading AP elections **results only** into a Postgres databa
 
 ## Installation
 
+Clone the repository, create a virtualenvironment and install requirements.
+
 ```
 git clone git@github.com:newsdev/elex-ftp-loader.git
 mkvirtualenv elex-ftp-loader
 cd elex-ftp-loader
 pip install -r requirements.txt
+```
+
+Export environment variables you need.
+
+```
+export RACEDATE=<YYYY-MM-DD>
+export AP_FTP_USER=<YOUR AP FTP USERNAME>
+export AP_FTP_PASS=<YOUR AP FTP PASSWORD>
 ```
 
 ## Usage
