@@ -14,7 +14,7 @@ ENVIRONMENTS = {
     }
 }
 
-env.project_name = 'elex-loader'
+env.project_name = 'elex-ftp-loader'
 env.user = "ubuntu"
 env.forward_agent = True
 env.branch = "master"
@@ -70,13 +70,13 @@ def pip_install():
 def update(racedate=None):
     if racedate:
         env.racedate = racedate
-    api.run('export RACEDATE=%(racedate)s; workon %(project_name)s && cd /home/ubuntu/%(project_name)s; ./update.sh' % env)
+    api.run('export RACEDATE=%(racedate)s; workon %(project_name)s && cd /home/ubuntu/%(project_name)s; ./scripts/%(settings)s/update.sh' % env)
 
 @api.task
 def init(racedate=None):
     if racedate:
         env.racedate = racedate
-    api.run('export RACEDATE=%(racedate)s; workon %(project_name)s && cd /home/ubuntu/%(project_name)s; ./init.sh' % env)
+    api.run('export RACEDATE=%(racedate)s; workon %(project_name)s && cd /home/ubuntu/%(project_name)s; ./scripts/%(settings)s/init.sh' % env)
 
 
 @api.task
