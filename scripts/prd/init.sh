@@ -16,12 +16,6 @@ fi
 date "+STARTED: %H:%M:%S"
 echo "------------------------------"
 
-echo "Drop elex_$1 if it exists"
-dropdb -h $ELEX_DB_HOST -U elex elex_$RACEDATE --if-exists
-
-echo "Create elex_$RACEDATE"
-psql -h $ELEX_DB_HOST -U elex -d elex_$RACEDATE -l | grep -q elex_$RACEDATE || createdb -h $ELEX_DB_HOST -U elex elex_$RACEDATE
-
 echo "Initialize races"
 cat /home/ubuntu/elex-loader/fields/races.txt | psql -h $ELEX_DB_HOST -U elex -d elex_$RACEDATE
 python /home/ubuntu/elex-ftp-loader/init.py --races | psql -h $ELEX_DB_HOST -U elex -d elex_$RACEDATE -c "COPY races FROM stdin DELIMITER ',' CSV HEADER;"
