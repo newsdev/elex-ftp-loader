@@ -28,15 +28,11 @@ python /home/ubuntu/elex-ftp-loader/init.py --races | psql -h $ELEX_DB_HOST -U e
 
 echo "Initialize reporting units"
 cat /home/ubuntu/elex-loader/fields/reporting_units.txt | psql -h $ELEX_DB_HOST -U elex -d elex_$RACEDATE
-python /home/ubuntu/elex-ftp-loader/init.py --reporting-units | psql -h $ELEX_DB_HOST -U elex -d elex_$RACEDATE -c "COPY reporting_units FROM stdin DELIMITER ',' CSV HEADER;"
+python /home/ubuntu/elex-ftp-loader/init.py --reportingunits | psql -h $ELEX_DB_HOST -U elex -d elex_$RACEDATE -c "COPY reporting_units FROM stdin DELIMITER ',' CSV HEADER;"
 
 echo "Initialize candidates"
 cat /home/ubuntu/elex-loader/fields/candidates.txt | psql -h $ELEX_DB_HOST -U elex -d elex_$RACEDATE
 python /home/ubuntu/elex-ftp-loader/init.py --candidates | psql -h $ELEX_DB_HOST -U elex -d elex_$RACEDATE -c "COPY candidates FROM stdin DELIMITER ',' CSV HEADER;"
-
-echo "Initialize ballot measures"
-cat /home/ubuntu/elex-loader/fields/ballot_measures.txt | psql -h $ELEX_DB_HOST -U elex -d elex_$RACEDATE
-python /home/ubuntu/elex-ftp-loader/init.py --ballot-measures | psql -h $ELEX_DB_HOST -U elex -d elex_$RACEDATE -c "COPY ballot_positions FROM stdin DELIMITER ',' CSV HEADER;"
 
 echo "------------------------------"
 date "+ENDED: %H:%M:%S"

@@ -28,15 +28,11 @@ python init.py --races | psql elex_$RACEDATE -c "COPY races FROM stdin DELIMITER
 
 echo "Initialize reporting units"
 cat /home/ubuntu/elex-loader/fields/reporting_units.txt | psql elex_$RACEDATE
-python init.py --reporting-units | psql elex_$RACEDATE -c "COPY reporting_units FROM stdin DELIMITER ',' CSV HEADER;"
+python init.py --reportingunits | psql elex_$RACEDATE -c "COPY reporting_units FROM stdin DELIMITER ',' CSV HEADER;"
 
 echo "Initialize candidates"
 cat /home/ubuntu/elex-loader/fields/candidates.txt | psql elex_$RACEDATE
 python init.py --candidates | psql elex_$RACEDATE -c "COPY candidates FROM stdin DELIMITER ',' CSV HEADER;"
-
-echo "Initialize ballot measures"
-cat /home/ubuntu/elex-loader/fields/ballot_measures.txt | psql elex_$RACEDATE
-python init.py --ballot-measures | psql elex_$RACEDATE -c "COPY ballot_positions FROM stdin DELIMITER ',' CSV HEADER;"
 
 echo "------------------------------"
 date "+ENDED: %H:%M:%S"
