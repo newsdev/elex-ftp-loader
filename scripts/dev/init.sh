@@ -40,7 +40,7 @@ cat fields/elex_candidates.txt | psql elex_$RACEDATE
 
 echo "Create race overrides table"
 cat fields/race_overrides.txt | psql elex_$RACEDATE
-cat fields/elex_results.txt | psql elex_$RACEDATE
+cat fields/elex_races.txt | psql elex_$RACEDATE
 
 echo "------------------------------"
 date "+ENDED: %H:%M:%S"
