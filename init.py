@@ -37,7 +37,7 @@ class Load(object):
 
         parser = argparse.ArgumentParser(description='Output AP election data as CSV.')
         parser.add_argument('--races', help='print races to stdout', dest='races', action='store_true')
-        parser.add_argument('--reporting_units', help='print reporting units to stdout', dest='reporting_units', action='store_true')
+        parser.add_argument('--reporting-units', help='print reporting units to stdout', dest='reporting_units', action='store_true')
         parser.add_argument('--candidates', help='print candidates to stdout', dest='candidates', action='store_true')
 
         for k,v in vars(parser.parse_args()).items():

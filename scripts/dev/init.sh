@@ -28,7 +28,7 @@ python init.py --races | psql elex_$RACEDATE -c "COPY races FROM stdin DELIMITER
 
 echo "Initialize reporting units"
 cat /home/ubuntu/elex-loader/fields/reporting_units.txt | psql elex_$RACEDATE
-python init.py --reportingunits | psql elex_$RACEDATE -c "COPY reporting_units FROM stdin DELIMITER ',' CSV HEADER;"
+python init.py --reporting-units | psql elex_$RACEDATE -c "COPY reporting_units FROM stdin DELIMITER ',' CSV HEADER;"
 
 echo "Initialize candidates"
 cat /home/ubuntu/elex-loader/fields/candidates.txt | psql elex_$RACEDATE
