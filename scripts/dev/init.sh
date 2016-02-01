@@ -34,5 +34,13 @@ echo "Initialize candidates"
 cat /home/ubuntu/elex-loader/fields/candidates.txt | psql elex_$RACEDATE
 python init.py --candidates | psql elex_$RACEDATE -c "COPY candidates FROM stdin DELIMITER ',' CSV HEADER;"
 
+echo "Create candidate overrides table"
+cat fields/candidate_overrides.txt | psql elex_$RACEDATE
+cat fields/elex_candidates.txt | psql elex_$RACEDATE
+
+echo "Create race overrides table"
+cat fields/race_overrides.txt | psql elex_$RACEDATE
+cat fields/elex_results.txt | psql elex_$RACEDATE
+
 echo "------------------------------"
 date "+ENDED: %H:%M:%S"
