@@ -21,7 +21,7 @@ function drop_table {
 }
 
 function get_results {
-    python ../../update.py > results.csv
+    python /home/ubuntu/elex-ftp-loader/update.py > results.csv
 }
 
 function load_results {
