@@ -26,7 +26,7 @@ for (( i=1; i<100000; i+=1 )); do
 
     TIMESTAMP=$(date +"%s")
 
-    cd /home/ubuntu/elex-loader/
+    cd /home/ubuntu/elex-ftp-loader/
 
     set_temp_tables
 
