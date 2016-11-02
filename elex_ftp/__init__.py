@@ -55,13 +55,15 @@ FIELDS = {
     'winner':None
 }
 
+FIELDNAMES = ('id','raceid','racetype','racetypeid','ballotorder','candidateid','description','delegatecount','electiondate','electtotal','electwon','fipscode','first','incumbent','initialization_data','is_ballot_position','last','lastupdated','level','national','officeid','officename','party','polid','polnum','precinctsreporting','precinctsreportingpct','precinctstotal','reportingunitid','reportingunitname','runoff','seatname','seatnum','statename','statepostal','test','uncontested','candidate_unique_id','votecount','votepct','winner')
+
 
 def output_csv(output):
     """
     Handles CSV output.
     Requires an iterable.
     """
-    writer = csv.DictWriter(sys.stdout, fieldnames=FIELDS.keys())
+    writer = csv.DictWriter(sys.stdout, fieldnames=FIELDNAMES)
     writer.writeheader()
     for o in output:
         writer.writerow(o)
