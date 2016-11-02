@@ -1,4 +1,4 @@
-function set_live_tables {e
+function set_live_tables {
     echo "Setting live results tables."
     cat fields/results.txt | psql -h localhost -U elex -d elex_$RACEDATE
 }
