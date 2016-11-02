@@ -23,7 +23,7 @@ setup(
     url='https://github.com/newsdev/elex-ftp-loader',
     description='Client for parsing the Associated Press\'s elections FTP site',
     long_description=read('README.rst'),
-    packages=('elex_ftp'),
+    packages=('elex_ftp',),
     entry_points={
         'console_scripts': (
             'elex-ftp = elex_ftp:main',

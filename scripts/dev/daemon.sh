@@ -1,5 +1,5 @@
 #!/bin/bash
-. scripts/dev/_update.sh
+. scripts/dev/_results.sh
 . scripts/dev/_views.sh
 
 if [[ ! -z $1 ]] ; then 

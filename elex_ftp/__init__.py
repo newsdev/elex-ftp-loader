@@ -174,7 +174,7 @@ class Load(object):
         self.ftp_pass = os.environ.get('AP_FTP_PASS', None)
 
 
-if __name__ == '__main__':
+def main():
     l = Load()
 
     with open(os.devnull, 'wb') as devnull:
@@ -187,3 +187,7 @@ if __name__ == '__main__':
 
     # itertools.chain.from_iterable() unpacks a list of lists.
     output_csv(itertools.chain.from_iterable([parse_race(race_path) for race_path in glob.glob('%s/*.xml' % l.data_path)]))
+
+
+if __name__ == '__main__':
+    main()
