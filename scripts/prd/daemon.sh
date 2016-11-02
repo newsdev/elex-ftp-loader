@@ -1,22 +1,48 @@
 #!/bin/bash
+. scripts/dev/_update.sh
+. scripts/dev/_views.sh
 
-# set RACEDATE from the first argument, if it exists
-if [[ ! -z $1 ]] ; then
-    RACEDATE=$1
+if [[ ! -z $1 ]] ; then 
+    RACEDATE=$1 
 fi
 
-if [[ -z $RACEDATE ]] ; then
-    echo 'Provide a race date, such as 2016-02-01'
-    exit 1
+if [ -f /tmp/elex_loader_timeout.sh ]; then
+    . /tmp/elex_loader_timeout.sh
 fi
 
-if [[ -z "$AP_API_KEY" ]] ; then
-    echo "Missing environmental variable AP_API_KEY. Try 'export AP_API_KEY=MY_API_KEY_GOES_HERE'."
-    exit 1
+if [[ -z $ELEX_LOADER_TIMEOUT ]] ; then
+    ELEX_LOADER_TIMEOUT=60
 fi
 
-while [ 1 ]; do
-    .update.sh $RACEDATE
-    export NODE_ENV="production" && cd /home/ubuntu/election-2016/ && npm run post-update $RACEDATE
-    sleep 60
+for (( i=1; i<100000; i+=1 )); do
+
+    if [ -f /tmp/elex_loader_timeout.sh ]; then
+        . /tmp/elex_loader_timeout.sh
+    fi
+
+    echo "Timeout:" $ELEX_LOADER_TIMEOUT"s"
+    
+    SECONDS=0
+
+    TIMESTAMP=$(date +"%s")
+
+    cd /home/ubuntu/elex-loader/
+
+    pre
+    set_temp_tables
+
+    load_national_results
+
+    copy_results
+    views
+    post
+
+    echo "Results time elapsed:" $SECONDS"s"
+
+    cd /home/ubuntu/election-2016/LATEST/ && npm run post-update "$RACEDATE"
+
+    echo "Total time elapsed:" $SECONDS"s"
+
+    sleep $ELEX_LOADER_TIMEOUT
+
 done

@@ -1,0 +1,9 @@
+DROP TABLE IF EXISTS override_candidates CASCADE; 
+create table override_candidates as
+    select candidate_unique_id, 
+            raceid, 
+            statepostal, 
+            cast(false AS BOOLEAN) as nyt_winner, 
+            cast(null AS VARCHAR(255)) as nyt_name
+        from results
+            group by raceid, statepostal, candidate_unique_id;
