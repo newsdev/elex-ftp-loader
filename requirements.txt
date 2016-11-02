@@ -1,3 +1,2 @@
-fabric==1.10.2
--e git+git@github.com:newsdev/elex.git#egg=elex
--e git+git@github.com:datadesk/python-elections.git#egg=python-elections
+fabric
+untangle
