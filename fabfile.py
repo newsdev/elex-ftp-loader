@@ -64,25 +64,22 @@ def e(environment):
 def clone():
     api.run('git clone git@github.com:newsdev/%(project_name)s.git /home/ubuntu/%(project_name)s' % env)
 
+def mkvirtualenv():
+    api.run('mkvirtualenv %(project_name)s' % env)
+
 @api.task
 def pull():
     api.run('cd /home/ubuntu/%(project_name)s; git fetch; git pull origin %(branch)s' % env)
 
 @api.task
 def pip_install():
-    api.run('cd /home/ubuntu/%(project_name)s; workon %(project_name)s && pip install -r requirements.txt' % env)
+    api.run('cd /home/ubuntu/%(project_name)s; workon %(project_name)s && pip install -r requirements.txt; python setup.py install' % env)
 
 @api.task
-def update(racedate=None):
-    if racedate:
-        env.racedate = racedate
-    api.run('export RACEDATE=%(racedate)s; workon %(project_name)s && cd /home/ubuntu/%(project_name)s; ./scripts/%(settings)s/update.sh' % env)
-
-@api.task
-def init(racedate=None):
-    if racedate:
-        env.racedate = racedate
-    api.run('export RACEDATE=%(racedate)s; workon %(project_name)s && cd /home/ubuntu/%(project_name)s; ./scripts/%(settings)s/init.sh' % env)
+def setup():
+    clone()
+    mkvirtualenv()
+    pip_install()
 
 @api.task
 def deploy():
