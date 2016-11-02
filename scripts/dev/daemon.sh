@@ -26,20 +26,14 @@ for (( i=1; i<100000; i+=1 )); do
 
     TIMESTAMP=$(date +"%s")
 
-    cd /home/ubuntu/elex-loader/
-
-    pre
     set_temp_tables
 
     load_national_results
 
     copy_results
     views
-    post
 
     echo "Results time elapsed:" $SECONDS"s"
-
-    # cd /home/ubuntu/election-2016/LATEST/ && npm run post-update "$RACEDATE"
 
     echo "Total time elapsed:" $SECONDS"s"
 
