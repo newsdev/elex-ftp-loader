@@ -28,14 +28,12 @@ for (( i=1; i<100000; i+=1 )); do
 
     cd /home/ubuntu/elex-loader/
 
-    pre
     set_temp_tables
 
     load_national_results
 
     copy_results
     views
-    post
 
     echo "Results time elapsed:" $SECONDS"s"
 
