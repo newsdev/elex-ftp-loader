@@ -7,10 +7,16 @@ from fabric.state import env
 
 ENVIRONMENTS = {
     "prd": {
-        "hosts": [os.environ.get('ELEX_LOADER_PRD_HOST', None)],
+        "hosts": 'int-elex-prd-east.newsdev.net'
     }, 
     "stg": {
-        "hosts": [os.environ.get('ELEX_LOADER_STG_HOST', None)]
+        "hosts": 'int-elex-stg-east.newsdev.net'
+    },
+    "prd-west": {
+        "hosts": 'int-elex-prd-west.newsdev.net'
+    }, 
+    "stg-west": {
+        "hosts": 'int-elex-stg-west.newsdev.net'
     }
 }
 
@@ -77,7 +83,6 @@ def init(racedate=None):
     if racedate:
         env.racedate = racedate
     api.run('export RACEDATE=%(racedate)s; workon %(project_name)s && cd /home/ubuntu/%(project_name)s; ./scripts/%(settings)s/init.sh' % env)
-
 
 @api.task
 def deploy():
