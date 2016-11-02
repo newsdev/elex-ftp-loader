@@ -79,19 +79,18 @@ def str_to_bool(possible_bool):
         if possible_bool.lower() in ['f', '0', 'no', 'false']:
             return False
 
-    return None
+    return False
 
 
-def parse_xml(path):
+def parse_race(race_path):
     """
     Handles the parsing of the XML file.
     Transforms from nested XML to lists of candidate-reportingunits.
     Output is a list of dicts.
     """
-    obj = untangle.parse(path)
+    obj = untangle.parse(race_path)
 
     payload = []
-
     race_data = {}
 
     race_data['id'] = "%s-%s" % (obj.Vote.Race.ReportingUnit['StatePostal'], obj.Vote.Race['ID'])
@@ -104,18 +103,26 @@ def parse_xml(path):
     race_data['seatname'] = obj.Vote.Race['SeatName']
     race_data['seatnum'] = obj.Vote.Race['SeatNum']
     race_data['test'] = str_to_bool(obj.Vote['Test'])
-
-    race_data['statepostal'] = obj.Vote.Race.ReportingUnit['StatePostal']
     race_data['statename'] = obj.Vote.Race.ReportingUnit['Name']
     race_data['level'] = obj.Vote.Race.ReportingUnit['Level']
+    race_data['national'] = True
+    race_data['reportingunitname'] = obj.Vote.Race.ReportingUnit['StatePostal']
+    race_data['statepostal'] = obj.Vote.Race.ReportingUnit['StatePostal']
+    race_data['reportingunitid'] = "state-%s-1" % obj.Vote.Race.ReportingUnit['StatePostal']
+    race_data['is_ballot_position'] = False
+    if race_data['officeid'] == 'I':
+        race_data['is_ballot_position'] = True
 
     race_data['precinctsreporting'] = obj.Vote.Race.ReportingUnit.Precincts['Reporting']
     race_data['precinctstotal'] = obj.Vote.Race.ReportingUnit.Precincts['Total']
+    race_data['precinctsreportingpct'] = 0.0
 
     try:
-        race_data['precinctsreportingpct'] = (float(race_data['precinctsreporting']) / float(race_data['precinctstotal']))*100
+        race_data['precinctsreportingpct'] = (float(race_data['precinctsreporting']) / float(race_data['precinctstotal']))
     except:
-        race_data['precinctsreportingpct'] = 0.0
+        pass
+
+    total_votes = sum(int(c['VoteCount']) for c in obj.Vote.Race.ReportingUnit.Candidate)
 
     for c in obj.Vote.Race.ReportingUnit.Candidate:
         cand = dict(race_data)
@@ -128,6 +135,22 @@ def parse_xml(path):
         cand['party'] = c['Party']
         cand['incumbent'] = str_to_bool(c['Incumbent'])
         cand['uncontested'] = str_to_bool(c['Uncontested'])
+
+        cand['votepct'] = 0.0
+        cand['winner'] = False
+        cand['runoff'] = False
+
+        if c['Winner'] == "X":
+            cand['winner'] = True
+
+        if c['Winner'] == "R":
+            cand['runoff'] = True
+
+        try:
+            if total_votes > 0:
+                cand['votepct'] = (float(cand['votecount']) / total_votes)
+        except:
+            pass
 
         payload.append(cand)
 
@@ -163,4 +186,4 @@ if __name__ == '__main__':
         subprocess.check_call(['unzip', '%s/US_erml.zip' % l.data_path, '-d', l.data_path], stdout=devnull, stderr=subprocess.STDOUT)
 
     # itertools.chain.from_iterable() unpacks a list of lists.
-    output_csv(list(itertools.chain.from_iterable([parse_xml(z) for z in glob.glob('%s/*.xml' % l.data_path)])))
+    output_csv(itertools.chain.from_iterable([parse_race(race_path) for race_path in glob.glob('%s/*.xml' % l.data_path)]))
