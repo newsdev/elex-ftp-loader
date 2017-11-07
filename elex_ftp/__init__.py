@@ -168,8 +168,8 @@ class Load(object):
     data_path = None
 
     def __init__(self):
-        self.ftp_site = os.environ.get('AP_FTP_SITE', 'ftp://electionsonline.ap.org')
-        self.ftp_path = '/US_topofticket/xml/US_erml.zip'
+        self.ftp_site = os.environ.get('AP_FTP_SITE', 'electionsonline.ap.org')
+        self.ftp_path = '//%s/xml/%s_erml.zip'
         self.timestamp = str(int(time.mktime(datetime.datetime.timetuple(datetime.datetime.now()))))
         self.data_path = os.environ.get('AP_FTP_LOCAL_DATA_PATH', '/tmp/%s/' % self.timestamp)
         self.ftp_user = os.environ.get('AP_FTP_USER', None)
@@ -179,17 +179,28 @@ class Load(object):
 def main():
     l = Load()
 
-    with open(os.devnull, 'wb') as devnull:
-        """
-        Uses subprocess to supress output.
-        """
-        subprocess.check_call(['mkdir', '-p', l.data_path], stdout=devnull, stderr=subprocess.STDOUT)
-        subprocess.check_call(['wget', '%s%s' % (l.ftp_site, l.ftp_path), '--user', l.ftp_user, '--password', l.ftp_pass, '-O', '%s/US_erml.zip' % l.data_path], stdout=devnull, stderr=subprocess.STDOUT)
-        subprocess.check_call(['unzip', '%s/US_erml.zip' % l.data_path, '-d', l.data_path], stdout=devnull, stderr=subprocess.STDOUT)
+    state_list = ['VA', 'UT', 'NJ', 'NY', 'ME', 'OH']
+
+    for state in state_list:
+        os.system('rm -rf %s%s.zip' % (l.data_path, state))
+        os.system('rm -rf %s*%s*.xml' % (l.data_path, state))
+
+    with open('url_list.txt', 'w') as writefile:
+        for state in state_list:
+            ftp_site = "ftp://%s:%s@%s" % (l.ftp_user, l.ftp_pass, l.ftp_site)
+            ftp_path = l.ftp_path % (state, state)
+            file_name = "%s.zip" % state
+            output = '%s%s\n-o\n%s%s\n' % (ftp_site, ftp_path, l.data_path, file_name)
+            writefile.write(output)
+
+    os.system('xargs -P 6 -n 3 curl --silent -L < url_list.txt')
+    os.system('rm -rf url_list.txt')
+
+    for state in state_list:
+        os.system('unzip -d %s %s%s.zip' % (l.data_path, l.data_path, state))
 
     # itertools.chain.from_iterable() unpacks a list of lists.
-    output_csv(itertools.chain.from_iterable([parse_race(race_path) for race_path in glob.glob('%s/*.xml' % l.data_path)]))
-
+    output_csv(itertools.chain.from_iterable([parse_race(race_path) for race_path in glob.glob('%s*.xml' % l.data_path)]))
 
 if __name__ == '__main__':
     main()
