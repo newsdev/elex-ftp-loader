@@ -197,7 +197,7 @@ def main():
     os.system('rm -rf url_list.txt')
 
     for state in state_list:
-        os.system('unzip -d %s %s%s.zip' % (l.data_path, l.data_path, state))
+        os.system('unzip -d %s %s%s.zip > /dev/null 2>&1' % (l.data_path, l.data_path, state))
 
     # itertools.chain.from_iterable() unpacks a list of lists.
     output_csv(itertools.chain.from_iterable([parse_race(race_path) for race_path in glob.glob('%s*.xml' % l.data_path)]))
