@@ -1,91 +1,17 @@
 #!/usr/bin/env python
 
 import argparse
-import csv
 import datetime
 import glob
 import itertools
 import os
-import sys
-import subprocess
 import time
 
+import elex_ftp.fields as fields
 import elex_ftp.states as states
+import elex_ftp.utils as utils
 
 import untangle
-
-
-FIELDS = {
-    'id': None,
-    'raceid': None,
-    'racetype': None,
-    'racetypeid': None,
-    'ballotorder': None,
-    'candidateid': None,
-    'description': None,
-    'delegatecount': None,
-    'electiondate': None,
-    'electtotal': None,
-    'electwon': None,
-    'fipscode': None,
-    'first': None,
-    'incumbent': None,
-    'initialization_data': None,
-    'is_ballot_position': None,
-    'last': None,
-    'lastupdated': None,
-    'level': None,
-    'national': None,
-    'officeid': None,
-    'officename': None,
-    'party': None,
-    'polid': None,
-    'polnum': None,
-    'precinctsreporting': None,
-    'precinctsreportingpct': None,
-    'precinctstotal': None,
-    'reportingunitid': None,
-    'reportingunitname': None,
-    'runoff': None,
-    'seatname': None,
-    'seatnum': None,
-    'statename': None,
-    'statepostal': None,
-    'test': None,
-    'uncontested': None,
-    'candidate_unique_id': None,
-    'votecount': None,
-    'votepct': None,
-    'winner':None
-}
-
-FIELDNAMES = ('id','raceid','racetype','racetypeid','ballotorder','candidateid','description','delegatecount','electiondate','electtotal','electwon','fipscode','first','incumbent','initialization_data','is_ballot_position','last','lastupdated','level','national','officeid','officename','party','polid','polnum','precinctsreporting','precinctsreportingpct','precinctstotal','reportingunitid','reportingunitname','runoff','seatname','seatnum','statename','statepostal','test','uncontested','candidate_unique_id','votecount','votepct','winner')
-
-
-def output_csv(output):
-    """
-    Handles CSV output.
-    Requires an iterable.
-    """
-    writer = csv.DictWriter(sys.stdout, fieldnames=FIELDNAMES)
-    writer.writeheader()
-    for o in output:
-        writer.writerow(o)
-
-
-def str_to_bool(possible_bool):
-    """
-    Attempts to coerce various strings to bool.
-    Fails to None
-    """
-    if possible_bool:
-        if possible_bool.lower() in ['t', '1', 'yes', 'true']:
-            return True
-
-        if possible_bool.lower() in ['f', '0', 'no', 'false']:
-            return False
-
-    return False
 
 
 def parse_race(race_path):
@@ -109,7 +35,7 @@ def parse_race(race_path):
     race_data['description'] = obj.Vote.Race['Desc']
     race_data['seatname'] = obj.Vote.Race['SeatName']
     race_data['seatnum'] = obj.Vote.Race['SeatNum']
-    race_data['test'] = str_to_bool(obj.Vote['Test'])
+    race_data['test'] = utils.str_to_bool(obj.Vote['Test'])
     race_data['level'] = obj.Vote.Race.ReportingUnit['Level']
     race_data['fipscode'] = obj.Vote.Race.ReportingUnit['FIPSCode']
 
@@ -152,8 +78,8 @@ def parse_race(race_path):
         cand['last'] = c['Last']
         cand['first'] = c['First']
         cand['party'] = c['Party']
-        cand['incumbent'] = str_to_bool(c['Incumbent'])
-        cand['uncontested'] = str_to_bool(c['Uncontested'])
+        cand['incumbent'] = utils.str_to_bool(c['Incumbent'])
+        cand['uncontested'] = utils.str_to_bool(c['Uncontested'])
 
         cand['votepct'] = 0.0
         cand['winner'] = False
@@ -188,7 +114,7 @@ class Load(object):
     xml_paths = None
 
     def parse_xml(self):
-        output_csv(itertools.chain.from_iterable([parse_race(race_path) for race_path in glob.glob('%s*.xml' % self.data_path)]))
+        utils.output_csv(itertools.chain.from_iterable([parse_race(race_path) for race_path in glob.glob('%s*.xml' % self.data_path)]))
 
     def unzip_xml_zips(self):
         os.system('echo "%s" | xargs -P 25 -n 1 unzip -d %s > /dev/null 2>&1' % (self.xml_paths, self.data_path))
@@ -204,14 +130,14 @@ class Load(object):
             file_name = "%s.zip" % state
             self.xml_urls += '%s%s\n-o\n%s%s\n' % (ftp_site, ftp_path, self.data_path, file_name)
 
-    def clean_old_files(self):
+    def clean_files(self):
         for state in states.STATES:
             os.system('rm -rf %s%s.zip' % (self.data_path, state))
             os.system('rm -rf %s*%s*.xml' % (self.data_path, state))
 
-    def set_states(self, states=None):
-        if states:
-            self.states = [s.strip().upper() for s in states.split(',')]
+    def set_states(self, states_to_parse=None):
+        if states_to_parse:
+            self.states = [s.strip().upper() for s in states_to_parse.split(',')]
         else:
             self.states = states.STATES
 
@@ -226,10 +152,11 @@ class Load(object):
         self.ftp_path = '//%s/xml/%s_erml.zip'
         self.timestamp = str(int(time.mktime(datetime.datetime.timetuple(datetime.datetime.now()))))
         self.data_path = os.environ.get('AP_FTP_LOCAL_DATA_PATH', '/tmp/%s/' % self.timestamp)
+        os.system('mkdir -p %s' % self.data_path)
         self.ftp_user = os.environ.get('AP_FTP_USER', None)
         self.ftp_pass = os.environ.get('AP_FTP_PASS', None)
 
-        self.set_states(states=kwargs.get('states', None))
+        self.set_states(states_to_parse=kwargs.get('states_to_parse', None))
         self.generate_xml_paths()
 
 def main():
@@ -237,13 +164,13 @@ def main():
     parser.add_argument('-s', '--states', action='store', help="A comma-separated list of state abbreviations to parse.")
     args = parser.parse_args()
 
-    l = Load(states=args.states)
-    l.clean_old_files()
+    l = Load(states_to_parse=args.states)
     l.generate_xml_urls()
     l.generate_xml_paths()
     l.download_xml_zips()
     l.unzip_xml_zips()
     l.parse_xml()
+    l.clean_files()
 
 if __name__ == '__main__':
     main()
