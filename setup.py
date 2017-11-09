@@ -26,7 +26,7 @@ setup(
     packages=('elex_ftp',),
     entry_points={
         'console_scripts': (
-            'elex-ftp = elex_ftp:main',
+            'elexftp = elex_ftp:main',
         ),
     },
     license="Apache License 2.0",

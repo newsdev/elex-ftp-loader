@@ -1,5 +1,6 @@
 #!/usr/bin/env python
 
+import argparse
 import csv
 import datetime
 import glob
@@ -9,7 +10,10 @@ import sys
 import subprocess
 import time
 
+import elex_ftp.states as states
+
 import untangle
+
 
 FIELDS = {
     'id': None,
@@ -96,6 +100,7 @@ def parse_race(race_path):
     race_data = {}
 
     race_data['id'] = "%s-%s" % (obj.Vote.Race.ReportingUnit['StatePostal'], obj.Vote.Race['ID'])
+    race_data['electiondate'] = obj.Vote['ElectionDate']
     race_data['raceid'] = obj.Vote.Race['ID']
     race_data['racetype'] = obj.Vote.Race['Type']
     race_data['racetypeid'] = obj.Vote.Race['TypeID']
@@ -105,15 +110,27 @@ def parse_race(race_path):
     race_data['seatname'] = obj.Vote.Race['SeatName']
     race_data['seatnum'] = obj.Vote.Race['SeatNum']
     race_data['test'] = str_to_bool(obj.Vote['Test'])
-    race_data['statename'] = obj.Vote.Race.ReportingUnit['Name']
     race_data['level'] = obj.Vote.Race.ReportingUnit['Level']
+    race_data['fipscode'] = obj.Vote.Race.ReportingUnit['FIPSCode']
+
     race_data['national'] = True
-    race_data['reportingunitname'] = obj.Vote.Race.ReportingUnit['StatePostal']
+    race_data['reportingunitname'] = obj.Vote.Race.ReportingUnit['Name']
     race_data['statepostal'] = obj.Vote.Race.ReportingUnit['StatePostal']
-    race_data['reportingunitid'] = "state-%s-1" % obj.Vote.Race.ReportingUnit['StatePostal']
+    race_data['statename'] = states.STATE_ABBR_LOOKUP[race_data['statepostal']]
     race_data['is_ballot_position'] = False
+
     if race_data['officeid'] == 'I':
         race_data['is_ballot_position'] = True
+
+    if race_data['level'] == 'subunit':
+        race_data['level'] = 'county'
+    if race_data['statepostal'] == "ME":
+        race_data['reportingunitid'] = "township"
+
+    if race_data['level'] == 'state':
+        race_data['reportingunitid'] = "state-%s-1" % obj.Vote.Race.ReportingUnit['StatePostal']
+    else:
+        race_data['reportingunitid'] = "%s-%s-%s" % (race_data['level'], race_data['fipscode'], race_data['raceid'])
 
     race_data['precinctsreporting'] = obj.Vote.Race.ReportingUnit.Precincts['Reporting']
     race_data['precinctstotal'] = obj.Vote.Race.ReportingUnit.Precincts['Total']
@@ -166,8 +183,49 @@ class Load(object):
     ftp_pass = None
     timestamp = None
     data_path = None
+    states = None
+    xml_urls = None
+    xml_paths = None
 
-    def __init__(self):
+    def parse_xml(self):
+        output_csv(itertools.chain.from_iterable([parse_race(race_path) for race_path in glob.glob('%s*.xml' % self.data_path)]))
+
+    def unzip_xml_zips(self):
+        os.system('echo "%s" | xargs -P 25 -n 1 unzip -d %s > /dev/null 2>&1' % (self.xml_paths, self.data_path))
+
+    def download_xml_zips(self):
+        with open('%sxml_urls.txt' % self.data_path, 'w') as writefile:
+            writefile.write(self.xml_urls)
+        os.system('xargs -P 25 -n 3 curl --silent -L < %sxml_urls.txt' % self.data_path)
+        if os.path.isfile('%sxml_urls.txt' % self.data_path):
+            os.system('rm -f %sxml_urls.txt' % self.data_path)
+
+    def generate_xml_urls(self):
+        self.xml_urls = ""
+        for state in self.states:
+            ftp_site = "ftp://%s:%s@%s" % (self.ftp_user, self.ftp_pass, self.ftp_site)
+            ftp_path = self.ftp_path % (state, state)
+            file_name = "%s.zip" % state
+            self.xml_urls += '%s%s\n-o\n%s%s\n' % (ftp_site, ftp_path, self.data_path, file_name)
+
+    def clean_old_files(self):
+        for state in states.STATES:
+            os.system('rm -rf %s%s.zip' % (self.data_path, state))
+            os.system('rm -rf %s*%s*.xml' % (self.data_path, state))
+
+    def set_states(self, states=None):
+        if states:
+            self.states = [s.strip().upper() for s in states.split(',')]
+        else:
+            self.states = states.STATES
+
+    def xml_path_for_state(self, state):
+        return("%s%s.zip" % (self.data_path, state))
+
+    def generate_xml_paths(self):
+        self.xml_paths = "\n".join([self.xml_path_for_state(s) for s in self.states])
+
+    def __init__(self, **kwargs):
         self.ftp_site = os.environ.get('AP_FTP_SITE', 'electionsonline.ap.org')
         self.ftp_path = '//%s/xml/%s_erml.zip'
         self.timestamp = str(int(time.mktime(datetime.datetime.timetuple(datetime.datetime.now()))))
@@ -175,32 +233,22 @@ class Load(object):
         self.ftp_user = os.environ.get('AP_FTP_USER', None)
         self.ftp_pass = os.environ.get('AP_FTP_PASS', None)
 
+        self.set_states(states=kwargs.get('states', None))
+        self.generate_xml_paths()
 
 def main():
-    l = Load()
 
-    state_list = ['VA', 'UT', 'NJ', 'NY', 'ME', 'OH']
+    parser = argparse.ArgumentParser()
+    parser.add_argument('-s', '--states', action='store', help="A comma-separated list of state abbreviations to parse.")
+    args = parser.parse_args()
 
-    for state in state_list:
-        os.system('rm -rf %s%s.zip' % (l.data_path, state))
-        os.system('rm -rf %s*%s*.xml' % (l.data_path, state))
-
-    with open('url_list.txt', 'w') as writefile:
-        for state in state_list:
-            ftp_site = "ftp://%s:%s@%s" % (l.ftp_user, l.ftp_pass, l.ftp_site)
-            ftp_path = l.ftp_path % (state, state)
-            file_name = "%s.zip" % state
-            output = '%s%s\n-o\n%s%s\n' % (ftp_site, ftp_path, l.data_path, file_name)
-            writefile.write(output)
-
-    os.system('xargs -P 6 -n 3 curl --silent -L < url_list.txt')
-    os.system('rm -rf url_list.txt')
-
-    for state in state_list:
-        os.system('unzip -d %s %s%s.zip > /dev/null 2>&1' % (l.data_path, l.data_path, state))
-
-    # itertools.chain.from_iterable() unpacks a list of lists.
-    output_csv(itertools.chain.from_iterable([parse_race(race_path) for race_path in glob.glob('%s*.xml' % l.data_path)]))
+    l = Load(states=args.states)
+    l.clean_old_files()
+    l.generate_xml_urls()
+    l.generate_xml_paths()
+    l.download_xml_zips()
+    l.unzip_xml_zips()
+    l.parse_xml()
 
 if __name__ == '__main__':
     main()
