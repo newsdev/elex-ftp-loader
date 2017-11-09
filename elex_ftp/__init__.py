@@ -194,11 +194,7 @@ class Load(object):
         os.system('echo "%s" | xargs -P 25 -n 1 unzip -d %s > /dev/null 2>&1' % (self.xml_paths, self.data_path))
 
     def download_xml_zips(self):
-        with open('%sxml_urls.txt' % self.data_path, 'w') as writefile:
-            writefile.write(self.xml_urls)
-        os.system('xargs -P 25 -n 3 curl --silent -L < %sxml_urls.txt' % self.data_path)
-        if os.path.isfile('%sxml_urls.txt' % self.data_path):
-            os.system('rm -f %sxml_urls.txt' % self.data_path)
+        os.system('echo "%s" | xargs -P 25 -n 3 curl --silent -L' % self.xml_urls)
 
     def generate_xml_urls(self):
         self.xml_urls = ""
@@ -237,7 +233,6 @@ class Load(object):
         self.generate_xml_paths()
 
 def main():
-
     parser = argparse.ArgumentParser()
     parser.add_argument('-s', '--states', action='store', help="A comma-separated list of state abbreviations to parse.")
     args = parser.parse_args()
