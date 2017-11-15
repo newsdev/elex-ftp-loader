@@ -14,7 +14,7 @@ FIELDS = {
     'first': None,
     'incumbent': None,
     'initialization_data': None,
-    'is_ballot_position': None,
+    'is_ballot_measure': None,
     'last': None,
     'lastupdated': None,
     'level': None,
@@ -42,10 +42,4 @@ FIELDS = {
     'winner':None
 }
 
-FIELDNAMES = ('id','raceid','racetype','racetypeid','ballotorder','candidateid','description',
-                'delegatecount','electiondate','electtotal','electwon','fipscode','first',
-                'incumbent','initialization_data','is_ballot_position','last','lastupdated',
-                'level','national','officeid','officename','party','polid','polnum',
-                'precinctsreporting','precinctsreportingpct','precinctstotal','reportingunitid',
-                'reportingunitname','runoff','seatname','seatnum','statename','statepostal',
-                'test','uncontested','candidate_unique_id','votecount','votepct','winner')
+FIELDNAMES = FIELDS.keys()

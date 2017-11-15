@@ -43,10 +43,10 @@ def parse_race(race_path):
     race_data['reportingunitname'] = obj.Vote.Race.ReportingUnit['Name']
     race_data['statepostal'] = obj.Vote.Race.ReportingUnit['StatePostal']
     race_data['statename'] = states.STATE_ABBR_LOOKUP[race_data['statepostal']]
-    race_data['is_ballot_position'] = False
+    race_data['is_ballot_measure'] = False
 
     if race_data['officeid'] == 'I':
-        race_data['is_ballot_position'] = True
+        race_data['is_ballot_measure'] = True
 
     if race_data['level'] == 'subunit':
         race_data['level'] = 'county'
@@ -165,6 +165,7 @@ def main():
     args = parser.parse_args()
 
     l = Load(states_to_parse=args.states)
+
     l.generate_xml_urls()
     l.generate_xml_paths()
     l.download_xml_zips()
